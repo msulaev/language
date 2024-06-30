@@ -9,7 +9,7 @@ class Language{
             return exp;
         }
         if(isString(exp)){
-            return exp;
+            return exp.slice(1, -1);
         }
         throw new Error('not implemented');
     }
