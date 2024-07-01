@@ -14,9 +14,9 @@ class Language {
             return exp.slice(1, -1);
         }
 
-        if (exp[0] === '+') {
-            return exp[1] + exp[2];
-        }
+        if (Array.isArray(exp) && exp[0] === '+') {
+            return this.eval(exp[1]) + this.eval(exp[2]);
+        }        
 
         throw new Error('not implemented');
     }
@@ -34,5 +34,7 @@ const language = new Language();
 assert.strictEqual(language.eval(1), 1);
 assert.strictEqual(language.eval('"hello"'), 'hello');
 assert.strictEqual(language.eval(['+', 1, 5]), 6);
+assert.strictEqual(language.eval(['+', ['+', 3 , 2], 5]), 10);
+
 
 console.log('all tests pass');
