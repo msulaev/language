@@ -37,6 +37,11 @@ class Language {
             return env.define(name, this.eval(value, env));
         }
 
+        if (Array.isArray(exp) && exp[0] === 'set') {  
+            const [_, name, value] = exp;
+            return env.assign(name, this.eval(value, env));
+        }
+
         if (isVariableName(exp)){
             return env.lookup(exp);
         }
@@ -106,5 +111,24 @@ assert.strictEqual(language.eval(
         ],
         'x'
     ]), 10);
+
+assert.strictEqual(language.eval(
+    ['begin',
+        ['var', 'val', 10],
+        ['var', 'result', ['begin',
+            ['var', 'x', ['+', 'val', 10]],
+            'x'
+        ]],
+        'result'
+    ]), 20);
+    assert.strictEqual(language.eval(
+        ['begin',
+            ['var', 'data', 10],
+            ['begin',
+                ['set', 'data', 100],
+            ],
+            'data'
+        ]), 100);
+
 
 console.log('all tests pass');

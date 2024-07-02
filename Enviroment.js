@@ -1,7 +1,3 @@
-/** 
-* Scope
-*/
-
 export default class Enviroment{
 
     constructor(record = {}, parent = null) {
@@ -14,13 +10,22 @@ export default class Enviroment{
         return value;
     }
 
+    assign(name, value) {
+        this._resolve(name).record[name] = value;
+        return value;
+    }
+
     lookup(name) {
+        return this._resolve(name).record[name];
+    }
+
+    _resolve(name) {
         if (this.record.hasOwnProperty(name)) {
-            return this.record[name];
+            return this;
         }
-        if (this.parent) {
-            return this.parent.lookup(name);
+        if (this.parent == null) {
+            throw new ReferenceError(`Variable "${name}" is not defined.`);
         }
-        throw new ReferenceError(`Variable "${name}" is not defined.`);
+        return this.parent._resolve(name);
     }
 }
