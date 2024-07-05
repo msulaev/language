@@ -74,6 +74,15 @@ class Language {
             return this.eval(falseBranch, env);
         }
 
+        if (Array.isArray(exp) && exp[0] === 'while') {
+            const [_tag, condition, body] = exp;
+            let result;
+            while (this.eval(condition, env)) {
+                result = this.eval(body, env);
+            }
+            return result;
+        }
+
         // ---------------------------------------------
         // Block: sequence of expressions
         if (Array.isArray(exp) && exp[0] === 'begin') {
@@ -115,18 +124,21 @@ const language = new Language(new Enviroment({
     GLOBAL: 'global 0.1'
 }));
 
-//test number & string
+// Test number & string
 assert.strictEqual(language.eval(1), 1);
 assert.strictEqual(language.eval('"hello"'), 'hello');
-//test math expressions
+
+// Test math expressions
 assert.strictEqual(language.eval(['+', 1, 5]), 6);
 assert.strictEqual(language.eval(['+', ['+', 3, 2], 5]), 10);
 assert.strictEqual(language.eval(['*', ['+', 3, 2], 5]), 25);
-//test variables
+
+// Test variables
 assert.strictEqual(language.eval(['var', 'x', 42]), 42);
 assert.strictEqual(language.eval('x'), 42);
 assert.strictEqual(language.eval(['var', 'y', 'true']), true);
-// test block
+
+// Test block
 assert.strictEqual(language.eval(
     ['begin',
         ['var', 'x', 10],
@@ -154,7 +166,7 @@ assert.strictEqual(language.eval(
         'result'
     ]), 20);
 
-// test set
+// Test set
 assert.strictEqual(language.eval(
     ['begin',
         ['var', 'data', 10],
@@ -164,7 +176,7 @@ assert.strictEqual(language.eval(
         'data'
     ]), 100);
 
-//test if expression
+// Test if expression
 assert.strictEqual(language.eval(
     ['begin',
         ['var', 'x', 10],
@@ -176,5 +188,19 @@ assert.strictEqual(language.eval(
         ],
         'y'
     ]), 30);
+
+// Test while expression
+assert.strictEqual(language.eval(
+    ['begin',
+        ['var', 'counter', 0],
+        ['var', 'result', 0],
+        ['while', ['<', 'counter', 10],
+            ['begin',
+                ['set', 'result', ['+', 'result', 1]],
+                ['set', 'counter', ['+', 'counter', 1]],
+            ],
+        ],
+        'result'
+    ]), 10);
 
 console.log('all tests pass');
