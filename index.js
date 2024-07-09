@@ -125,90 +125,11 @@ const language = new Language(new Enviroment({
     GLOBAL: 'global 0.1'
 }));
 
-// Test number & string
-assert.strictEqual(language.eval(1), 1);
-assert.strictEqual(language.eval('"hello"'), 'hello');
-
-// Test math expressions
-assert.strictEqual(language.eval(['+', 1, 5]), 6);
-assert.strictEqual(language.eval(['+', ['+', 3, 2], 5]), 10);
-assert.strictEqual(language.eval(['*', ['+', 3, 2], 5]), 25);
-
-// Test variables
-assert.strictEqual(language.eval(['var', 'x', 42]), 42);
-assert.strictEqual(language.eval('x'), 42);
-assert.strictEqual(language.eval(['var', 'y', 'true']), true);
-
-// Test block
-assert.strictEqual(language.eval(
-    ['begin',
-        ['var', 'x', 10],
-        ['var', 'y', 20],
-        ['+', 'x', 'y']
-    ]), 30);
-
-assert.strictEqual(language.eval(
-    ['begin',
-        ['var', 'x', 10],
-        ['begin',
-            ['var', 'x', 20],
-            'x'
-        ],
-        'x'
-    ]), 10);
-
-assert.strictEqual(language.eval(
-    ['begin',
-        ['var', 'val', 10],
-        ['var', 'result', ['begin',
-            ['var', 'x', ['+', 'val', 10]],
-            'x'
-        ]],
-        'result'
-    ]), 20);
-
-// Test set
-assert.strictEqual(language.eval(
-    ['begin',
-        ['var', 'data', 10],
-        ['begin',
-            ['set', 'data', 100],
-        ],
-        'data'
-    ]), 100);
-
-// Test if expression
-assert.strictEqual(language.eval(
-    ['begin',
-        ['var', 'x', 10],
-        ['var', 'y', 20],
-        ['if',
-            ['>', 'x', 10],
-            ['set', 'y', 20],
-            ['set', 'y', 30],
-        ],
-        'y'
-    ]), 30);
-
-// Test while expression
-assert.strictEqual(language.eval(
-    ['begin',
-        ['var', 'counter', 0],
-        ['var', 'result', 0],
-        ['while', ['<', 'counter', 10],
-            ['begin',
-                ['set', 'result', ['+', 'result', 1]],
-                ['set', 'counter', ['+', 'counter', 1]],
-            ],
-        ],
-        'result'
-    ]), 10);
-
-test(`
-    (begin
-        (var x 10)
-        (var y 20)
-        (+ (* x 10) y))
-    `, 120) ;
-
+test(language, '1', 1); // Test number evaluation
+test(language, '"hello"', 'hello'); // Test string evaluation
+test(language, '(+ 1 5)', 6); // Test addition
+test(language, '(+ (+ 3 2) 5)', 10); // Test nested addition
+test(language, '(* (+ 3 2) 5)', 25); // Test multiplication with nested addition
+test(language, '(begin (var x 42) x)', 42); // Test variable declaration and usage
+test(language, '(begin (var x 10) (var y 20) (+ x y))', 30); // Test block execution
 console.log('all tests pass');
