@@ -1,5 +1,6 @@
 import assert from 'assert';
 import Enviroment from './Enviroment.js';
+import {test} from './test-util.js';
 
 /**
  * interpreter
@@ -202,5 +203,12 @@ assert.strictEqual(language.eval(
         ],
         'result'
     ]), 10);
+
+test(`
+    (begin
+        (var x 10)
+        (var y 20)
+        (+ (* x 10) y))
+    `, 120) ;
 
 console.log('all tests pass');
