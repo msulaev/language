@@ -569,7 +569,11 @@ function unexpectedEndOfInput() {
 }
 
 function parseError(message) {
-  throw new SyntaxError(message);
+  let enhancedMessage = message;
+  if (position !== undefined) {
+      enhancedMessage += ` at position ${position}`;
+  }
+  throw new SyntaxError(enhancedMessage);
 }
 
-module.exports = yyparse;
+export default yyparse;

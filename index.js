@@ -1,6 +1,6 @@
 import assert from 'assert';
 import Enviroment from './Enviroment.js';
-import {test} from './test-util.js';
+import test from './test-util.js';
 
 /**
  * interpreter
