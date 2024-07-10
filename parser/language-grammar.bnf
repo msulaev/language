@@ -6,6 +6,7 @@
 \s+                   /* Ignore whitespace */
 \"[^\"]*\"            return 'STRING';
 \d+                   return 'NUMBER';
+true|false            return 'BOOLEAN';
 [\w\+*-=<>/]+         return 'SYMBOL';
 .                     return 'UNKNOWN';
 
@@ -22,6 +23,7 @@ Exp
 Atom
   : NUMBER { $$ = Number(yytext); }
   | STRING { $$ = yytext; }
+  | BOOLEAN { $$ = (yytext === 'true'); }
   | SYMBOL { $$ = yytext; }
   ;
 
@@ -33,3 +35,4 @@ ListEntries
   : ListEntries Exp { $1.push($2); $$ = $1; }
   | /* empty */     { $$ = []; }
   ;
+

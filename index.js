@@ -21,6 +21,14 @@ class Language {
             return exp.slice(1, -1);
         }
 
+        if (Array.isArray(exp) && exp[0] === '++') {
+            const varName = exp[1];
+            const currentValue = env.lookup(varName);
+            const newValue = currentValue + 1;
+            env.assign(varName, newValue);
+            return newValue;
+        }
+
         if (Array.isArray(exp) && exp[0] === '+') {
             return this.eval(exp[1], env) + this.eval(exp[2], env);
         } 
@@ -51,6 +59,18 @@ class Language {
 
         if (Array.isArray(exp) && exp[0] === '=') {
             return this.eval(exp[1], env) === this.eval(exp[2], env);
+        }
+
+        if (Array.isArray(exp) && exp[0] === 'or') {
+            return this.eval(exp[1], env) || this.eval(exp[2], env);
+        }
+        
+        if (Array.isArray(exp) && exp[0] === 'and') {
+            return this.eval(exp[1], env) && this.eval(exp[2], env);
+        }
+        
+        if (Array.isArray(exp) && exp[0] === 'not') {
+            return !this.eval(exp[1], env);
         }
 
         if (Array.isArray(exp) && exp[0] === 'var') {
@@ -132,4 +152,10 @@ test(language, '(+ (+ 3 2) 5)', 10); // Test nested addition
 test(language, '(* (+ 3 2) 5)', 25); // Test multiplication with nested addition
 test(language, '(begin (var x 42) x)', 42); // Test variable declaration and usage
 test(language, '(begin (var x 10) (var y 20) (+ x y))', 30); // Test block execution
+test(language, '(or 1 2)', 1); // Test logical OR
+test(language, '(or 1 2 3)', 1); // Test logical OR with multiple values
+test(language, '(and 1 2)', 2); // Test logical AND
+test(language, '(not 1)', false); // Test logical NOT
+//test(language, '(++ 1)', 2); // Test increment
+//test(language, '(begin (var x 1) (++ x) x)', 2); // Test increment in block
 console.log('all tests pass');
