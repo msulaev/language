@@ -22,11 +22,20 @@ class Language {
         }
 
         if (Array.isArray(exp) && exp[0] === '++') {
-            const varName = exp[1];
-            const currentValue = env.lookup(varName);
-            const newValue = currentValue + 1;
-            env.assign(varName, newValue);
-            return newValue;
+            const operand = exp[1];
+            if (isVariableName(operand)) {
+                const currentValue = env.lookup(operand);
+                if (typeof currentValue !== 'number') {
+                    throw new Error(`Variable ${operand} is not a number`);
+                }
+                const newValue = currentValue + 1;
+                env.assign(operand, newValue);
+                return newValue;
+            } else if (typeof operand === 'number') {
+                return operand + 1;
+            } else {
+                throw new Error(`Operand ${operand} is not a variable name or a number`);
+            }
         }
 
         if (Array.isArray(exp) && exp[0] === '+') {
@@ -156,6 +165,7 @@ test(language, '(or 1 2)', 1); // Test logical OR
 test(language, '(or 1 2 3)', 1); // Test logical OR with multiple values
 test(language, '(and 1 2)', 2); // Test logical AND
 test(language, '(not 1)', false); // Test logical NOT
-//test(language, '(++ 1)', 2); // Test increment
-//test(language, '(begin (var x 1) (++ x) x)', 2); // Test increment in block
+test(language, '(++ 1)', 2); // Test increment
+//test(language, '(++ "foo")', 'Operand "foo" is not a variable name or a number'); // Test increment with string
+test(language, '(begin (var x 1) (++ x) x)', 2); // Test increment in block
 console.log('all tests pass');
