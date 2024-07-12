@@ -13,17 +13,17 @@ class Language {
     }
 
     eval(exp, env = this.global) {
-        if (isNumber(exp)) {
+        if (this._isNumber(exp)) {
             return exp;
         }
 
-        if (isString(exp)) {
+        if (this._isString(exp)) {
             return exp.slice(1, -1);
         }
 
         if (Array.isArray(exp) && exp[0] === '++') {
             const operand = exp[1];
-            if (isVariableName(operand)) {
+            if (this._isVariableName(operand)) {
                 const currentValue = env.lookup(operand);
                 if (typeof currentValue !== 'number') {
                     throw new Error(`Variable ${operand} is not a number`);
@@ -36,38 +36,6 @@ class Language {
             } else {
                 throw new Error(`Operand ${operand} is not a variable name or a number`);
             }
-        }
-
-        if (Array.isArray(exp) && exp[0] === '+') {
-            return this.eval(exp[1], env) + this.eval(exp[2], env);
-        } 
-        
-        if (Array.isArray(exp) && exp[0] === '-') {
-            return this.eval(exp[1], env) - this.eval(exp[2], env);
-        }  
-        
-        if (Array.isArray(exp) && exp[0] === '*') {
-            return this.eval(exp[1], env) * this.eval(exp[2], env);
-        }        
-
-        if (Array.isArray(exp) && exp[0] === '>') {
-            return this.eval(exp[1], env) > this.eval(exp[2], env);
-        }
-
-        if (Array.isArray(exp) && exp[0] === '<') {
-            return this.eval(exp[1], env) < this.eval(exp[2], env);
-        }
-
-        if (Array.isArray(exp) && exp[0] === '<=') {
-            return this.eval(exp[1], env) <= this.eval(exp[2], env);
-        }
-
-        if (Array.isArray(exp) && exp[0] === '>=') {
-            return this.eval(exp[1], env) >= this.eval(exp[2], env);
-        }
-
-        if (Array.isArray(exp) && exp[0] === '=') {
-            return this.eval(exp[1], env) === this.eval(exp[2], env);
         }
 
         if (Array.isArray(exp) && exp[0] === 'or') {
@@ -92,7 +60,7 @@ class Language {
             return env.assign(name, this.eval(value, env));
         }
 
-        if (isVariableName(exp)){
+        if (this._isVariableName(exp)){
             return env.lookup(exp);
         }
 
@@ -120,6 +88,15 @@ class Language {
             return this._evalBlock(exp, blockEnv);
         }
 
+        if(Array.isArray(exp)){
+            const fn = this.eval(exp[0]);
+            const args = exp.slice(1).map(arg => this.eval(arg, env));
+            if (typeof fn === 'function') { // built-in function
+                return fn(...args);
+            }
+
+        }
+
         throw new Error(`not implemented: ${JSON.stringify(exp)}`);
     }
 
@@ -131,28 +108,42 @@ class Language {
         });
         return result;
     }
-}
 
-function isNumber(exp) {
-    return typeof exp === 'number';
-}
-
-function isString(exp) {
-    return typeof exp === 'string' && exp[0] === '"' && exp[exp.length - 1] === '"';
-}
-
-function isVariableName(exp) {
-    return typeof exp === 'string' && /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(exp);
+    _isNumber(exp) {
+        return typeof exp === 'number';
+    }
+    
+    _isString(exp) {
+        return typeof exp === 'string' && exp[0] === '"' && exp[exp.length - 1] === '"';
+    }
+    
+    _isVariableName(exp) {
+        return typeof exp === 'string' && /^[+\-*/<>=a-zA-Z0-9_]*$/.test(exp);
+    }
 }
 
 // ---------------------------------------------
 // Tests
-const language = new Language(new Enviroment({
+const globalEnv = new Enviroment({
     null: null,
     true: true,
     false: false,
-    GLOBAL: 'global 0.1'
-}));
+    GLOBAL: 'global 0.1',
+    '+'(op1, op2) { return op1 + op2; },
+    '-'(op1, op2=null) { 
+        if(op2 == null) return -op1;
+        return op1 - op2; },
+    '*'(op1, op2) { return op1 * op2; },
+    '/'(op1, op2) { return op1 / op2; },
+    '>'(op1, op2) { return op1 > op2; },
+    '<'(op1, op2) { return op1 < op2; },
+    '<='(op1, op2) { return op1 <= op2; },
+    '>='(op1, op2) { return op1 >= op2; },
+    '='(op1, op2) { return op1 === op2; },
+    print(...args) { console.log(...args); },
+});
+
+const language = new Language(globalEnv);
 
 test(language, '1', 1); // Test number evaluation
 test(language, '"hello"', 'hello'); // Test string evaluation
@@ -168,4 +159,5 @@ test(language, '(not 1)', false); // Test logical NOT
 test(language, '(++ 1)', 2); // Test increment
 //test(language, '(++ "foo")', 'Operand "foo" is not a variable name or a number'); // Test increment with string
 test(language, '(begin (var x 1) (++ x) x)', 2); // Test increment in block
+language.eval(['print', '"hello"', '"world"']); // Test print
 console.log('all tests pass');
