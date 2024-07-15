@@ -1,4 +1,3 @@
-import assert from 'assert';
 import Enviroment from './Enviroment.js';
 import test from './test-util.js';
 
@@ -7,12 +6,12 @@ import test from './test-util.js';
  */
 
 class Language {
-
     constructor(global = new Enviroment()){
         this.global = global;
     }
 
     eval(exp, env = this.global) {
+        console.log(`Evaluating: ${JSON.stringify(exp)}`); // Logging
         if (this._isNumber(exp)) {
             return exp;
         }
@@ -39,13 +38,23 @@ class Language {
         }
 
         if (Array.isArray(exp) && exp[0] === 'or') {
-            return this.eval(exp[1], env) || this.eval(exp[2], env);
+            for (let i = 1; i < exp.length; i++) {
+                if (this.eval(exp[i], env)) {
+                    return this.eval(exp[i], env);
+                }
+            }
+            return this.eval(exp[exp.length - 1], env);
         }
-        
+
         if (Array.isArray(exp) && exp[0] === 'and') {
-            return this.eval(exp[1], env) && this.eval(exp[2], env);
+            for (let i = 1; i < exp.length; i++) {
+                if (!this.eval(exp[i], env)) {
+                    return this.eval(exp[i], env);
+                }
+            }
+            return this.eval(exp[exp.length - 1], env);
         }
-        
+
         if (Array.isArray(exp) && exp[0] === 'not') {
             return !this.eval(exp[1], env);
         }
@@ -61,6 +70,7 @@ class Language {
         }
 
         if (this._isVariableName(exp)){
+            console.log(`Looking up variable: ${exp}`); // Logging
             return env.lookup(exp);
         }
 
@@ -81,6 +91,17 @@ class Language {
             return result;
         }
 
+        if (Array.isArray(exp) && exp[0] === 'def') {
+            const [_tag, name, args, body] = exp;
+            const fn = {
+                args,
+                body,
+                env, // closure
+            };
+            console.log(`Defining function: ${name}`); // Logging
+            return env.define(name, fn);
+        }
+
         // ---------------------------------------------
         // Block: sequence of expressions
         if (Array.isArray(exp) && exp[0] === 'begin') {
@@ -89,17 +110,32 @@ class Language {
         }
 
         if(Array.isArray(exp)){
-            const fn = this.eval(exp[0]);
+            const fn = this.eval(exp[0], env); // Ensure the correct environment is passed
+            console.log(`Function call: ${fn.args ? fn.args : 'built-in function'}`); // Logging
             const args = exp.slice(1).map(arg => this.eval(arg, env));
             if (typeof fn === 'function') { // built-in function
                 return fn(...args);
             }
 
+            const activationRecord = {};
+            fn.args.forEach((arg, index) => {
+                activationRecord[arg] = args[index];
+            });
+
+            const closureEnv = new Enviroment(activationRecord, fn.env);
+            return this._evalBody(fn.body, closureEnv);
         }
 
         throw new Error(`not implemented: ${JSON.stringify(exp)}`);
     }
-
+    
+    _evalBody(body, env) {
+        if(body[0] === 'begin') {  
+            return this._evalBlock(body, env);
+        }
+        return this.eval(body, env);
+    }
+    
     _evalBlock(block, env) {
         let result;
         const [_tag, ...expressions] = block;
@@ -160,4 +196,5 @@ test(language, '(++ 1)', 2); // Test increment
 //test(language, '(++ "foo")', 'Operand "foo" is not a variable name or a number'); // Test increment with string
 test(language, '(begin (var x 1) (++ x) x)', 2); // Test increment in block
 language.eval(['print', '"hello"', '"world"']); // Test print
+test(language,'(begin (def square (x) (* x x)) (square 2))', 4); // Test function definition and usage
 console.log('all tests pass');

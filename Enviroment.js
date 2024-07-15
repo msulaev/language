@@ -1,31 +1,32 @@
-export default class Enviroment{
-
-    constructor(record = {}, parent = null) {
-        this.record = record;
+class Enviroment {
+    constructor(records = {}, parent = null) {
+        this.records = records;
         this.parent = parent;
     }
 
     define(name, value) {
-        this.record[name] = value;
+        this.records[name] = value;
         return value;
     }
 
     assign(name, value) {
-        this._resolve(name).record[name] = value;
+        this.resolve(name).records[name] = value;
         return value;
     }
 
     lookup(name) {
-        return this._resolve(name).record[name];
+        return this.resolve(name).records[name];
     }
 
-    _resolve(name) {
-        if (this.record.hasOwnProperty(name)) {
+    resolve(name) {
+        if (this.records.hasOwnProperty(name)) {
             return this;
         }
         if (this.parent == null) {
             throw new ReferenceError(`Variable "${name}" is not defined.`);
         }
-        return this.parent._resolve(name);
+        return this.parent.resolve(name);
     }
 }
+
+export default Enviroment;
