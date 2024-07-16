@@ -93,13 +93,9 @@ class Language {
 
         if (Array.isArray(exp) && exp[0] === 'def') {
             const [_tag, name, args, body] = exp;
-            const fn = {
-                args,
-                body,
-                env, // closure
-            };
+            const varExp = ['var', name, ['lambda', args, body]];
             console.log(`Defining function: ${name}`); // Logging
-            return env.define(name, fn);
+            return this.eval(varExp, env);
         }
 
         // ---------------------------------------------
@@ -232,4 +228,12 @@ test(language, `
            (callback (+ x y))))
         (onClick (lambda (data) (* data 10)))
     )`, 300);
+test(language, `
+    ((lambda (x) (* x x)) 2)
+`, 4);
+test(language, `
+    (begin
+        (var square (lambda (x) (* x x)))
+    (square 2))
+`, 4);
 console.log('all tests pass');
