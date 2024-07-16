@@ -104,13 +104,22 @@ class Language {
 
         // ---------------------------------------------
         // Block: sequence of expressions
+        if (Array.isArray(exp) && exp[0] === 'lambda') {
+            const [_tag, args, body] = exp;
+            return {
+                args,
+                body,
+                env, // closure
+            };
+        }
+
         if (Array.isArray(exp) && exp[0] === 'begin') {
             const blockEnv = new Enviroment({}, env);
             return this._evalBlock(exp, blockEnv);
         }
 
         if(Array.isArray(exp)){
-            const fn = this.eval(exp[0], env); // Ensure the correct environment is passed
+            const fn = this.eval(exp[0], env); 
             console.log(`Function call: ${fn.args ? fn.args : 'built-in function'}`); // Logging
             const args = exp.slice(1).map(arg => this.eval(arg, env));
             if (typeof fn === 'function') { // built-in function
@@ -197,4 +206,30 @@ test(language, '(++ 1)', 2); // Test increment
 test(language, '(begin (var x 1) (++ x) x)', 2); // Test increment in block
 language.eval(['print', '"hello"', '"world"']); // Test print
 test(language,'(begin (def square (x) (* x x)) (square 2))', 4); // Test function definition and usage
+test(language, '(begin (def calc (x y) (begin (var z 30) (+ (* x y) z))) (calc 2 3))', 36); // Test function definition with block
+test(language, `
+    (begin 
+        (def makeCounter (initial) 
+            (begin 
+                (var count initial)
+                (def counter () 
+                    (begin 
+                        (set count (++ count)) 
+                        count)))
+        (makeCounter 0))
+    (var counter1 (makeCounter 5))
+    (var counter2 (makeCounter 10))
+    (counter1)
+    (counter1)
+    (counter2)
+)`, 11);
+test(language, `
+    (begin
+        (def onClick (callback)
+         (begin
+           (var x 10)
+           (var y 20)
+           (callback (+ x y))))
+        (onClick (lambda (data) (* data 10)))
+    )`, 300);
 console.log('all tests pass');
