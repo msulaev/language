@@ -1,4 +1,5 @@
 import Enviroment from './Enviroment.js';
+import Transformer  from './transform/Transformer.js';
 import test from './test-util.js';
 
 /**
@@ -8,6 +9,7 @@ import test from './test-util.js';
 class Language {
     constructor(global = new Enviroment()){
         this.global = global;
+        this._transformer = new Transformer();
     }
 
     eval(exp, env = this.global) {
@@ -92,11 +94,10 @@ class Language {
         }
 
         if (Array.isArray(exp) && exp[0] === 'def') {
-            const [_tag, name, args, body] = exp;
-            const varExp = ['var', name, ['lambda', args, body]];
-            console.log(`Defining function: ${name}`); // Logging
+            const varExp = this._transformer.transformDeftoLambda(exp);
             return this.eval(varExp, env);
         }
+    
 
         // ---------------------------------------------
         // Block: sequence of expressions
