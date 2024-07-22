@@ -97,7 +97,11 @@ class Language {
             const varExp = this._transformer.transformDeftoLambda(exp);
             return this.eval(varExp, env);
         }
-    
+
+        if (Array.isArray(exp) && exp[0] === 'switch') {
+            const ifExp = this._transformer.transformSwitchToIf(exp);
+            return this.eval(ifExp, env);            
+        }
 
         // ---------------------------------------------
         // Block: sequence of expressions
@@ -237,4 +241,14 @@ test(language, `
         (var square (lambda (x) (* x x)))
     (square 2))
 `, 4);
+test(language, `
+    (begin
+        (var x 10)
+        (switch
+            ((= x 10) 100)
+            ((> x 10) 200)
+            (else 300)
+        )
+    )
+`, 100);
 console.log('all tests pass');
