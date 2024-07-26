@@ -103,6 +103,11 @@ class Language {
             return this.eval(ifExp, env);            
         }
 
+        if (Array.isArray(exp) && exp[0] === 'for') {
+            const whileExp = this._transformer.transformForToWhile(exp);
+            return this.eval(whileExp, env);
+        }
+
         // ---------------------------------------------
         // Block: sequence of expressions
         if (Array.isArray(exp) && exp[0] === 'lambda') {
@@ -251,4 +256,12 @@ test(language, `
         )
     )
 `, 100);
+test(language, `
+    (begin
+        (var x 0)
+        (var y 10)
+        (for (var i 0) (< i y) (++ i) (begin (set x (+ x i))))
+        x
+    )
+`, 45);
 console.log('all tests pass');

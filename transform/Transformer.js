@@ -25,11 +25,16 @@ export default class Transformer {
                     current[3] = ['if', null, null, null];
                 }
             } else {
-                current[3] = ['else', null, currentBlock, null]; // Handle the case where 'else' is the last condition
+                current[3] = ['else', null, currentBlock, null];
             }
             current = current[3];
         }
 
         return ifExp;
+    }
+
+    transformForToWhile(exp) {
+        const [_tag, init, condition, increment, body] = exp;
+        return ['begin',init,['while', condition, ['begin', body, increment]]];
     }
 }
